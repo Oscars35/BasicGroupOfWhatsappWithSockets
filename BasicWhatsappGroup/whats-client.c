@@ -19,8 +19,7 @@ void die(char *s)
 
 int main(void) 
 {
-    int parentPid = getpid();
-	struct sockaddr_in si_other; //Struct of sockets
+	struct sockaddr_in si_other; 
 	int s, slen=sizeof(si_other);
 	char buf[BUFFER_SIZE];
 	char message[BUFFER_SIZE];
@@ -29,6 +28,7 @@ int main(void)
 	{
 		die("socket");
 	}
+  
 	memset((char *) &si_other, 0, sizeof(si_other));
 	si_other.sin_family = AF_INET;
 	si_other.sin_port = htons(DEFAULT_PORT);
@@ -40,6 +40,7 @@ int main(void)
 	}
 
 	if (sendto(s, CONNECTING_MESSAGE, strlen(CONNECTING_MESSAGE) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+
     {
         die("sendto()");
     }
@@ -62,17 +63,18 @@ int main(void)
     
 	    }
     } else {
-		printf("Enter messages to send : \n");
+		    printf("Enter messages to send : \n");
         while(1)
         {
-		    gets(message);
+		        gets(message);
 
-		    if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
-		    {
-			    die("sendto()");
-		    }
+		        if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+		        {
+			       die("sendto()");
+		        }
         }
     }
+
 
 	close(s);
 	return 0;
