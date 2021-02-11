@@ -4,7 +4,7 @@
 #include<stdbool.h>
 #include<arpa/inet.h>
 #include<sys/socket.h>
-#include <signal.h>
+#include<signal.h>
 
 #define DEFAULT_PORT 1234
 #define DEFAULT_HOST "127.0.0.1"
@@ -12,9 +12,7 @@
 
 char *CONNECTING_MESSAGE = "1";
 struct sockaddr_in si_other;
-int clientSocket;
-int childPid;
-int slen=sizeof(si_other);
+int clientSocket, childPid, slen=sizeof(si_other);
 
 void die(char *s);
 void initializeSocketConfiguration();
