@@ -1,5 +1,7 @@
 all: 
-	gcc -Wall whats-client.c -o client
+	python whats-server.py &
+	gcc -Wall whats-client.c -o client 
+	./client
 
 exec: 
 	./client
