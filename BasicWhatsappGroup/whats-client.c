@@ -19,6 +19,7 @@ void die(char *s)
 
 int main(void) 
 {
+    int parentPid = getpid();
 	struct sockaddr_in si_other; //Struct of sockets
 	int s, slen=sizeof(si_other);
 	char buf[BUFFER_SIZE];
@@ -43,32 +44,36 @@ int main(void)
         die("sendto()");
     }
 
-
-	while(1)
-	{
-	    //receive a reply and print it
-        //clear the buffer by filling null, it might have previously received data
-        memset(buf,'\0', BUFFER_SIZE);
-        
-        //try to receive some data, this is a blocking call
-        int n = recvfrom(s, buf, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &si_other, &slen) == -1;
-        if (n == -1)
-        {
-            die("recvfrom()");
-        }
+    int pid = fork();
+    if (pid == 0) {
+	    while(1)
+	    {
+            memset(buf,'\0', BUFFER_SIZE);
+            
+            int n = recvfrom(s, buf, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &si_other, &slen) == -1;
+            if (n == -1)
+            {
+                die("recvfrom()");
+            }
+            if (!strcmp("1", buf) == 0)
+                printf("Message arrived from another person: %s \n", buf);
+            else
+                printf("Conected to the server! yay!\n");
     
-        printf("Message arrived from another person: %s \n", buf);
+	    }
+    } else {
+		printf("Enter messages to send : \n");
+        while(1)
+        {
+		    gets(message);
 
-		printf("Enter message to send : ");
-		gets(message);
-		
-		//send the message
-		if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
-		{
-			die("sendto()");
-		}
-		
-	}
+		    if (sendto(s, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+		    {
+			    die("sendto()");
+		    }
+        }
+    }
+
 	close(s);
 	return 0;
 }
