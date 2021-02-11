@@ -39,9 +39,7 @@ if __name__ == "__main__":
     parser()
     whats_socket = get_new_socket()
     while True:
-        bytesAdressPair = whats_socket.recvfrom(BUFFER_SIZE)
-        message = bytesAdressPair[0]
-        address = bytesAdressPair[1]
+        message, address = whats_socket.recvfrom(BUFFER_SIZE)
         message = message.decode("utf-8")
         print (message)
         print (address)
@@ -54,8 +52,6 @@ if __name__ == "__main__":
                 if address_client != address:
                     message_to_send = str.encode(message)
                     whats_socket.sendto(message_to_send, address_client)
-
-
 
 
 
