@@ -3,7 +3,8 @@ all:
 	gcc -Wall whats-client.c -o client 
 	./client
 
-exec: 
+test: 
+	gcc -Wall whats-client.c -o client
 	./client
 
 clean:
