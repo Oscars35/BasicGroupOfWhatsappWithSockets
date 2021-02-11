@@ -23,11 +23,6 @@ int main(void)
 	int s, i, slen=sizeof(si_other);
 	char buf[BUFFER_SIZE];
 	char message[BUFFER_SIZE];
-void die(char *s)  
-{
-        perror(s);
-        exit(1);
-}
 	
 	//If creation of sockets fails
 	if ( (s=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
@@ -55,16 +50,16 @@ void die(char *s)
 	while(1)
 	{
 		//receive a reply and print it
-    //clear the buffer by filling null, it might have previously received data
-    memset(buf,'\0', BUFFER_SIZE);
-    //try to receive some data, this is a blocking call
-    int n = recvfrom(s, buf, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &si_other, &slen) == -1;
-    if (n == -1)
-    {
-      die("recvfrom()");
-    }
+    		//clear the buffer by filling null, it might have previously received data
+    		memset(buf,'\0', BUFFER_SIZE);
+   		 //try to receive some data, this is a blocking call
+    		int n = recvfrom(s, buf, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &si_other, &slen) == -1;
+    		if (n == -1)
+    		{
+     			die("recvfrom()");
+    		}
     
-    printf("Message arrived from another person: %s \n", buf);
+    		printf("Message arrived from another person: %s \n", buf);
 
 		printf("Enter message to send : ");
 		gets(message);
