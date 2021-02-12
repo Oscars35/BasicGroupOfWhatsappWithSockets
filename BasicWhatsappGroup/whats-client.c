@@ -86,8 +86,8 @@ void readFromKeyboardAndSendServer(){
     {
 	    char message[BUFFER_SIZE];
         fgets(message, sizeof(message), stdin);
-        if (send(clientSocket, message, sizeof(message), 0) < 0)
-            die("Send()");
+        if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen) < 0)
+			die("sendto()");
     }
 }
 

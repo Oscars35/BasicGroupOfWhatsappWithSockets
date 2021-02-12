@@ -1,4 +1,4 @@
-from multiprocessing import Queue, Process
+import threading
 import optparse
 import sys
 import socket
@@ -14,6 +14,12 @@ clients = []
 host = DEFAULT_HOST
 port = DEFAULT_PORT
 verbose = False
+
+class Pairs:
+
+    def __init__(self, socket, address):
+        self.socket = socket
+        self.address = address
 
 def parser():
     global verbose, port, host  #es com el this per a la funció i detectar que agafem les de #listofclients
@@ -36,30 +42,33 @@ def get_new_socket():
     whats_socket.bind((host, port))
     return whats_socket
 
-def read_from_socket(socket_client, queue, address):
+def read_from_socket(socket_client, clients, address):
     while True:
-        message = socket_client.recv(BUFFER_SIZE)
-        if len(message) <= 0:
-            break
-        for client in queue:
-            if client != socket:
-                final_message = address + '-->' + message
-                client.send(str.encode(final_message))
-    socket_client.close()
-    sys.exit() 
+        try:
+            print(f"reading message {address}")
+            message = socket_client.recv(BUFFER_SIZE)
+            message = message.decode("utf-8")
+            final_message = str(address) + "--> " + message
+            for i in clients:
+                if i.address != address:
+                    i.socket.send(str.encode(final_message))
+        finally:
+            clients.remove(Pairs(socket_client, address))
+            socket_client.close()
+            print("process exit")
+            sys.exit() 
 
 if __name__ == "__main__":
     parser()
-    clients_queue = Queue()
     whats_socket = get_new_socket()
     whats_socket.listen(1)
+    print("Waiting for client connections.....")
     while True:
-        print("Waiting for client connections.....")
         client_socket, address = whats_socket.accept()
         print(f"{address} connected!")
-        # Add client to clients queue (we use queue because they are thread and process safe)
-        clients_queue.put(client_socket)
+
+        clients.append(Pairs(client_socket, address))
         client_socket.send(str.encode("Connected to the server!"))
-        # Create process for each child and wait for a message
-        p = Process(target=read_from_socket, args=(client_socket, clients_queue, address))
-        p.start()
+
+        tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address))
+        tn.start()
