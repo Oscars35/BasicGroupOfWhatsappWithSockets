@@ -1,3 +1,4 @@
+import threading
 import optparse
 import sys
 import socket
@@ -13,6 +14,12 @@ clients = []
 host = DEFAULT_HOST
 port = DEFAULT_PORT
 verbose = False
+
+class Pairs:
+
+    def __init__(self, socket, address):
+        self.socket = socket
+        self.address = address
 
 def parser():
     global verbose, port, host  #es com el this per a la funció i detectar que agafem les de #listofclients
@@ -31,29 +38,42 @@ def parser():
         host = options.host
 
 def get_new_socket():
-    whats_socket=socket.socket(family=socket.AF_INET, type=socket.SOCK_DGRAM)
+    whats_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     whats_socket.bind((host, port))
     return whats_socket
+
+def read_from_socket(socket_client, clients, address):
+    while True:
+        try:
+            print(f"reading message {address}")
+            message = socket_client.recv(BUFFER_SIZE)
+            message = message.decode("utf-8")
+            if len(message) > 0:
+                final_message = str(address) + "--> " + message
+                for i in clients:
+                    if i != socket_client:
+                        i.send(str.encode(final_message))
+            else:
+                clients.remove(socket_client)
+                socket_client.close()
+                print("process exit")
+                sys.exit() 
+
+        except socket.error as msg:
+            print("Socket Error: %s",msg)
+            sys.exit() 
 
 if __name__ == "__main__":
     parser()
     whats_socket = get_new_socket()
+    whats_socket.listen(1)
+    print("Waiting for client connections.....")
     while True:
-        message, address = whats_socket.recvfrom(BUFFER_SIZE)
-        message = message.decode("utf-8")
-        print (message)
-        print (address)
-        if message == '1':
-            message = str.encode(message)
-            whats_socket.sendto(message, address)
-            clients.append(address)
-        else:
-            for address_client in clients:
-                if address_client != address:
-                    message_to_send = str.encode(message)
-                    whats_socket.sendto(message_to_send, address_client)
+        client_socket, address = whats_socket.accept()
+        print(f"{address} connected!")
 
+        clients.append(client_socket)
+        client_socket.send(str.encode("Connected to the server!"))
 
-
-
-
+        tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address))
+        tn.start()

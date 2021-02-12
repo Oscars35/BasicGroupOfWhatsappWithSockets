@@ -16,7 +16,7 @@ int clientSocket, childPid, slen=sizeof(si_other);
 
 void die(char *s);
 void initializeSocketConfiguration();
-void sendConnectMessage();
+void connectServer();
 void readInfoAndSendInfo();
 void readFromServer();
 void readFromKeyboardAndSendServer();
@@ -27,7 +27,7 @@ void emptyHandler(int sig);
 int main(void) 
 {
     initializeSocketConfiguration();
-    sendConnectMessage();
+    connectServer();
     readInfoAndSendInfo();
 	pclose(clientSocket);
 	return 0;
@@ -40,19 +40,17 @@ void die(char *s)
 }
 
 void initializeSocketConfiguration() {
-	if ( (clientSocket=socket(AF_INET, SOCK_DGRAM, IPPROTO_UDP)) == -1)
-		die("socket");
-	memset((char *) &si_other, 0, sizeof(si_other));
-	si_other.sin_family = AF_INET;
-	si_other.sin_port = htons(DEFAULT_PORT);
-	
-	if (inet_aton(DEFAULT_HOST , &si_other.sin_addr) == 0) 
-        die("inet_aton() failed \n");
+	if ( (clientSocket=socket(AF_INET, SOCK_STREAM, 0)) < 0)
+		die("socket()");
+    bzero(&si_other, sizeof(si_other));
+    si_other.sin_family = AF_INET; 
+    si_other.sin_addr.s_addr = inet_addr(DEFAULT_HOST); 
+    si_other.sin_port = htons(DEFAULT_PORT);
 }
 
-void sendConnectMessage() {
-	if (sendto(clientSocket, CONNECTING_MESSAGE, strlen(CONNECTING_MESSAGE) , 0 , (struct sockaddr *) &si_other, slen)==-1)
-        die("sendto()");
+void connectServer() {
+    if(connect(clientSocket, (struct sockaddr *) &si_other, sizeof(si_other)) < 0)
+        die("Error connect()");
 }
 
 void readInfoAndSendInfo() {
@@ -74,12 +72,11 @@ void readFromServer() {
 	while(true)
 	{
         memset(buf,'\0', BUFFER_SIZE);
-        if(recvfrom(clientSocket, buf, BUFFER_SIZE, MSG_WAITALL, (struct sockaddr *) &si_other, &slen) == -1)
-            die("recvfrom()");
-        if (!strcmp("1", buf) == 0)
-            printf("Message arrived from another person: %s \n", buf);
-        else
-            printf("Conected to the server! yay!\n");
+        if (recv(clientSocket, buf, sizeof(buf), 0) < 0)
+            die("Recv()");
+        if (sizeof(buf) < 0)
+            exit(-1);
+        printf("New message: %s \n", buf);
 	}
 }
 
@@ -89,7 +86,7 @@ void readFromKeyboardAndSendServer(){
     {
 	    char message[BUFFER_SIZE];
         fgets(message, sizeof(message), stdin);
-		if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen)==-1)
+        if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen) < 0)
 			die("sendto()");
     }
 }
