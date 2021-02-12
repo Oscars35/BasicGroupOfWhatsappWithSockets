@@ -48,14 +48,19 @@ def read_from_socket(socket_client, clients, address):
             print(f"reading message {address}")
             message = socket_client.recv(BUFFER_SIZE)
             message = message.decode("utf-8")
-            final_message = str(address) + "--> " + message
-            for i in clients:
-                if i.address != address:
-                    i.socket.send(str.encode(final_message))
-        finally:
-            clients.remove(Pairs(socket_client, address))
-            socket_client.close()
-            print("process exit")
+            if len(message) > 0:
+                final_message = str(address) + "--> " + message
+                for i in clients:
+                    if i != socket_client:
+                        i.send(str.encode(final_message))
+            else:
+                clients.remove(socket_client)
+                socket_client.close()
+                print("process exit")
+                sys.exit() 
+
+        except socket.error as msg:
+            print("Socket Error: %s",msg)
             sys.exit() 
 
 if __name__ == "__main__":
@@ -67,7 +72,7 @@ if __name__ == "__main__":
         client_socket, address = whats_socket.accept()
         print(f"{address} connected!")
 
-        clients.append(Pairs(client_socket, address))
+        clients.append(client_socket)
         client_socket.send(str.encode("Connected to the server!"))
 
         tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address))
