@@ -10,9 +10,11 @@
 #define DEFAULT_HOST "127.0.0.1"
 #define BUFFER_SIZE 1024
 
-char *CONNECTING_MESSAGE = "1";
-struct sockaddr_in si_other;
-int clientSocket, childPid, slen=sizeof(si_other);
+#define COLOR_RED "\033[01;31m"
+#define COLOR_END "\033[00m"
+
+struct sockaddr_in socketStructure;
+int clientSocket, childPid, slen=sizeof(socketStructure);
 
 void die(char *s);
 void initializeSocketConfiguration();
@@ -42,14 +44,14 @@ void die(char *s)
 void initializeSocketConfiguration() {
 	if ( (clientSocket=socket(AF_INET, SOCK_STREAM, 0)) < 0)
 		die("socket()");
-    bzero(&si_other, sizeof(si_other));
-    si_other.sin_family = AF_INET; 
-    si_other.sin_addr.s_addr = inet_addr(DEFAULT_HOST); 
-    si_other.sin_port = htons(DEFAULT_PORT);
+    bzero(&socketStructure, sizeof(socketStructure));
+    socketStructure.sin_family = AF_INET; 
+    socketStructure.sin_addr.s_addr = inet_addr(DEFAULT_HOST); 
+    socketStructure.sin_port = htons(DEFAULT_PORT);
 }
 
 void connectServer() {
-    if(connect(clientSocket, (struct sockaddr *) &si_other, sizeof(si_other)) < 0)
+    if(connect(clientSocket, (struct sockaddr *) &socketStructure, sizeof(socketStructure)) < 0)
         die("Error connect()");
 }
 
@@ -89,14 +91,14 @@ void readFromKeyboardAndSendServer(){
     {
 	    char message[BUFFER_SIZE];
         fgets(message, sizeof(message), stdin);
-        if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &si_other, slen) < 0)
+        if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &socketStructure, slen) < 0)
 			die("sendto()");
     }
 }
 
 // Handle ctrl + c exit
 void exitMenuHandler(int sig) {
-        printf("\nAre you sure to exit? y|n \n");
+        printf("%s\nAre you sure to exit? y|n %s \n", COLOR_RED, COLOR_END);
         char option;
         do {
             option = getchar();
