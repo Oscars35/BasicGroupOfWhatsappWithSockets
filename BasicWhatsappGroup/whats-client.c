@@ -72,9 +72,12 @@ void readFromServer() {
 	while(true)
 	{
         memset(buf,'\0', BUFFER_SIZE);
-        if (recv(clientSocket, buf, sizeof(buf), 0) < 0)
+        if (recv(clientSocket, buf, sizeof(buf), 0) <= 0) {
+            printf("Server is dead, exiting....\n");
+            kill(getppid(), SIGKILL);
             die("Recv()");
-        if (sizeof(buf) < 0)
+        }
+        if (sizeof(buf) <= 0)
             exit(-1);
         printf("New message: %s \n", buf);
 	}
