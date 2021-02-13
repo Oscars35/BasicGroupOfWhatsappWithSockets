@@ -80,7 +80,6 @@ void readFromServer() {
             die("Recv()");
         }
         if (sizeof(buf) <= 0) {
-            printf ("\nServer closing, exiting...\n");
             exit(-1);
         }
         printf("New message: %s \n", buf);
