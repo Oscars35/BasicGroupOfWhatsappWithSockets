@@ -2,6 +2,7 @@ import threading
 import optparse
 import sys
 import socket
+import signal
 
 #Variables globals per a que quedi més bonic
 DEFAULT_PORT = 1234
@@ -14,6 +15,18 @@ clients = []
 host = DEFAULT_HOST
 port = DEFAULT_PORT
 verbose = False
+
+def signal_handler(sig, frame):
+    decision = input ("\nAre you sure you want to close the server?. y|n: ")
+    while decision != 'y' and decision != 'n' :
+        decision = input ("Bad output. Are you sure you want to close the server?. y|n: ")
+    if decision == 'y':
+        print('Okey!, Closing server!...')
+        sys.exit()
+
+    else:
+        signal.signal(signal.SIGINT, signal_handler)
+
 
 def parser():
     global verbose, port, host  #es com el this per a la funció i detectar que agafem les de #listofclients
@@ -61,6 +74,7 @@ if __name__ == "__main__":
     parser()
     whats_socket = get_new_socket()
     whats_socket.listen(1)
+    signal.signal(signal.SIGINT, signal_handler)
     print("Waiting for client connections.....")
     while True:
         client_socket, address = whats_socket.accept()
@@ -69,5 +83,5 @@ if __name__ == "__main__":
         clients.append(client_socket)
         client_socket.send(str.encode("Connected to the server!"))
 
-        tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address))
+        tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address), daemon=True)
         tn.start()
