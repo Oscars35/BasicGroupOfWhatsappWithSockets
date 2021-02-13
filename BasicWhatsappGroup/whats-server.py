@@ -15,12 +15,6 @@ host = DEFAULT_HOST
 port = DEFAULT_PORT
 verbose = False
 
-class Pairs:
-
-    def __init__(self, socket, address):
-        self.socket = socket
-        self.address = address
-
 def parser():
     global verbose, port, host  #es com el this per a la funció i detectar que agafem les de #listofclients
     parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter())
