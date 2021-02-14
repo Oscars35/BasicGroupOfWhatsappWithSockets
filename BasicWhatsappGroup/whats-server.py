@@ -39,14 +39,14 @@ def receive_message(socket_client, clients, address, color_queue, color):
         send_message_other_clients(final_message, socket_client, clients)
     else:
         send_message_other_clients(Formater.left_chat(address), socket_client, clients)
-        clients.remove([socket_client, color])
+        clients.remove(socket_client)
         color_queue.put(color)
         socket_client.close()
         sys.exit() 
 
 # Sends the message to the receivers
 def send_message_other_clients(message, socket_sender, clients):
-    for current_socket, his_color in clients:
+    for current_socket in clients:
         if current_socket != socket_sender:
             current_socket.send(str.encode(message))
 
@@ -78,6 +78,6 @@ if __name__ == "__main__":
         # Get color for this user
         color = color_queue.get()
 
-        clients.append([client_socket, color])
+        clients.append(client_socket)
         tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address, color_queue, color), daemon=True)
         tn.start()
