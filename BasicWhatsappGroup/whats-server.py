@@ -1,21 +1,11 @@
-import threading
-import optparse
-import sys
-import socket
-import signal
+import threading, optparse, sys, socket, signal
+from queue import Queue
+from FlagsParser import Parser
+from MessageFormater import *
 
-#Variables globals per a que quedi més bonic
-DEFAULT_PORT = 1234
-DEFAULT_VERBOSE = False
-DEFAULT_HOST = '127.0.0.1'
 BUFFER_SIZE = 1024
 
-#List of clients
-clients = []
-host = DEFAULT_HOST
-port = DEFAULT_PORT
-verbose = False
-
+# Handle the sigint signal
 def signal_handler(sig, frame):
     decision = input ("\nAre you sure you want to close the server?. y|n: ")
     while decision != 'y' and decision != 'n' :
@@ -23,65 +13,71 @@ def signal_handler(sig, frame):
     if decision == 'y':
         print('Okey!, Closing server!...')
         sys.exit()
+    signal.signal(signal.SIGINT, signal_handler)
 
-    else:
-        signal.signal(signal.SIGINT, signal_handler)
+# returns a color queue
+def get_color_queue():
+    queue = Queue()
+    for color in ColorList:
+        queue.put(color)
+    return queue
 
 
-def parser():
-    global verbose, port, host  #es com el this per a la funció i detectar que agafem les de #listofclients
-    parser = optparse.OptionParser(formatter=optparse.TitledHelpFormatter())
-    parser.add_option ('-v', '--verbose', action='store_true', default=DEFAULT_VERBOSE, help='verbose output')
-    parser.add_option ('--host', action='store', type='string', default=DEFAULT_HOST, help='Host, default LocalHost')
-    parser.add_option ('-p', '--port', action='store', type='int', default=DEFAULT_PORT, help='Listening port, default 1234')
-    (options, args) = parser.parse_args()
-    if len(args) > 0:
-        parser.error('bad args, use --help for help')
-    if options.port is not None:
-        port = options.port
-    if options.verbose is not False:
-        verbose = True
-    if options.host is not None:
-        host = options.host
-
-def get_new_socket():
+# Returns a TCP socket
+def get_socket(host, port):
     whats_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
     whats_socket.bind((host, port))
     return whats_socket
 
-def read_from_socket(socket_client, clients, address):
+# Reads the message from the client. If the client has closed the socket, send to the other clients that the 
+# client has left the group and close his thread and socket
+def receive_message(socket_client, clients, address, color_queue, color):
+    message = socket_client.recv(BUFFER_SIZE)
+    if message:
+        final_message = message.decode("utf-8")
+        final_message = Formater.message_send(color, final_message, str(address))
+        send_message_other_clients(final_message, socket_client, clients)
+    else:
+        send_message_other_clients(Formater.left_chat(address), socket_client, clients)
+        clients.remove([socket_client, color])
+        color_queue.put(color)
+        socket_client.close()
+        sys.exit() 
+
+# Sends the message to the receivers
+def send_message_other_clients(message, socket_sender, clients):
+    for current_socket, his_color in clients:
+        if current_socket != socket_sender:
+            current_socket.send(str.encode(message))
+
+# Reads a message from a socket
+def read_from_socket(socket_client, clients, address, color_queue, color):
     while True:
         try:
-            print(f"reading message {address}")
-            message = socket_client.recv(BUFFER_SIZE)
-            message = message.decode("utf-8")
-            if len(message) > 0:
-                final_message = str(address) + "--> " + message
-                for i in clients:
-                    if i != socket_client:
-                        i.send(str.encode(final_message))
-            else:
-                clients.remove(socket_client)
-                socket_client.close()
-                print("process exit")
-                sys.exit() 
-
+            receive_message(socket_client, clients, address, color_queue, color)
         except socket.error as msg:
-            print("Socket Error: %s",msg)
+            print("socket error: %s",msg)
             sys.exit() 
 
 if __name__ == "__main__":
-    parser()
-    whats_socket = get_new_socket()
+    host, port, verbose = Parser.parse()
+    color_queue = get_color_queue()
+    whats_socket = get_socket(host, port)
     whats_socket.listen(1)
     signal.signal(signal.SIGINT, signal_handler)
+    clients = []
     print("Waiting for client connections.....")
     while True:
         client_socket, address = whats_socket.accept()
-        print(f"{address} connected!")
 
-        clients.append(client_socket)
-        client_socket.send(str.encode("Connected to the server!"))
+        # Tell to everybody that the client joined the server
+        client_socket.send(str.encode(Formater.connection_stablished_client()))
+        send_message_other_clients(Formater.joined(address), client_socket, clients)
+        print(Formater.connection_stablished_server(address))
 
-        tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address), daemon=True)
+        # Get color for this user
+        color = color_queue.get()
+
+        clients.append([client_socket, color])
+        tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address, color_queue, color), daemon=True)
         tn.start()
