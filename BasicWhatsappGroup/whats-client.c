@@ -5,6 +5,7 @@
 #include<arpa/inet.h>
 #include<sys/socket.h>
 #include<signal.h>
+#include<unistd.h>
 
 #define DEFAULT_PORT 1234
 #define DEFAULT_HOST "127.0.0.1"
@@ -31,7 +32,7 @@ int main(void)
     initializeSocketConfiguration();
     connectServer();
     readInfoAndSendInfo();
-	pclose(clientSocket);
+	close(clientSocket);
 	return 0;
 }
 
@@ -73,16 +74,12 @@ void readFromServer() {
 	char buf[BUFFER_SIZE];
 	while(true)
 	{
-        memset(buf,'\0', BUFFER_SIZE);
+        memset(buf,'\0', BUFFER_SIZE); // clear the buffer (important)
         if (recv(clientSocket, buf, sizeof(buf), 0) <= 0) {
-            printf("Server is dead, exiting....\n");
             kill(getppid(), SIGKILL);
-            die("Recv()");
+            die("Error reciving from server: Recv()");
         }
-        if (sizeof(buf) <= 0) {
-            exit(-1);
-        }
-        printf("New message: %s \n", buf);
+        printf("%s \n", buf);
 	}
 }
 
