@@ -42,6 +42,7 @@ def receive_message(socket_client, clients, address, color_queue, color):
     message = socket_client.recv(BUFFER_SIZE)
     if message:
         final_message = message.decode("utf-8")
+        final_message = final_message.replace("\n", "")
         final_message = Formater.message_send(color, final_message, str(address))
         send_message_other_clients(final_message, socket_client, clients)
     else:

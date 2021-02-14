@@ -23,7 +23,7 @@ class Formater:
 
     @staticmethod
     def connection_stablished_client():
-        return ColorSelection.SUCCESS.value + "Connected to the server!" + ColorSelection.FINAL_COLOR.value
+        return ColorSelection.SUCCESS.value + "Connected to the server! " + ColorSelection.FINAL_COLOR.value 
 
     @staticmethod
     def connection_stablished_server(client):
