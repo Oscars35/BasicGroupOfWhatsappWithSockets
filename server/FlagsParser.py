@@ -2,7 +2,7 @@ import optparse
 
 DEFAULT_PORT = 1234
 DEFAULT_VERBOSE = False
-DEFAULT_HOST = '192.168.2.216'
+DEFAULT_HOST = '127.0.0.1'
 
 class Parser:
 
