@@ -24,7 +24,6 @@ void readInfoAndSendInfo();
 void readFromServer();
 void readFromKeyboardAndSendServer();
 void exitMenuHandler(int sig);
-void emptyHandler(int sig);
 
 
 int main(void) 
@@ -59,8 +58,6 @@ void connectServer() {
 void readInfoAndSendInfo() {
     childPid = fork();
     if (childPid == 0) {
-        if (signal(SIGINT, emptyHandler) == SIG_ERR)
-            perror("Error initializing SIGINT");
         readFromServer();
     }else{
         if (signal(SIGINT, exitMenuHandler) == SIG_ERR)
@@ -74,20 +71,20 @@ void readFromServer() {
 	char buf[BUFFER_SIZE];
 	while(true)
 	{
-        memset(buf,'\0', BUFFER_SIZE); // clear the buffer (important)
+        memset(buf,'\0', BUFFER_SIZE); 
         if (recv(clientSocket, buf, sizeof(buf), 0) <= 0) {
             kill(getppid(), SIGKILL);
             die("Error reciving from server: Recv()");
         }
-        printf("%s \n", buf);
+        printf("\n%s\n", buf);
 	}
 }
 
 void readFromKeyboardAndSendServer(){
-    printf("Enter messages to send : \n");
+	char message[BUFFER_SIZE];
     while(true)
     {
-	    char message[BUFFER_SIZE];
+        memset(message, '\0', BUFFER_SIZE);
         fgets(message, sizeof(message), stdin);
         if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &socketStructure, slen) < 0)
 			die("sendto()");
@@ -96,7 +93,7 @@ void readFromKeyboardAndSendServer(){
 
 // Handle ctrl + c exit
 void exitMenuHandler(int sig) {
-        printf("%s\nAre you sure to exit? y|n %s \n", COLOR_RED, COLOR_END);
+            printf("%s\nAre you sure to exit? y|n %s \n", COLOR_RED, COLOR_END);
         char option;
         do {
             option = getchar();
@@ -109,9 +106,4 @@ void exitMenuHandler(int sig) {
             perror("Error initializing SIGUSR1");
 }
 
-// handle ctrl + c for kid
-void emptyHandler(int sig) {
-    if (signal(SIGINT, emptyHandler) == SIG_ERR)
-        perror("Error initializing SIGUSR1");
-}
 
