@@ -8,7 +8,7 @@
 #include<unistd.h>
 
 #define DEFAULT_PORT 1234
-#define DEFAULT_HOST "127.0.0.1"
+#define DEFAULT_HOST "192.168.2.216"
 #define BUFFER_SIZE 1024
 
 #define COLOR_RED "\033[01;31m"
