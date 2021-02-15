@@ -24,12 +24,14 @@ void readInfoAndSendInfo();
 void readFromServer();
 void readFromKeyboardAndSendServer();
 void exitMenuHandler(int sig);
+void sendNickNameToServer();
 
 
 int main(void) 
 {
     initializeSocketConfiguration();
     connectServer();
+    sendNickNameToServer();
     readInfoAndSendInfo();
 	close(clientSocket);
 	return 0;
@@ -67,6 +69,14 @@ void readInfoAndSendInfo() {
 
 }
 
+void sendNickNameToServer() {
+    char nickName[BUFFER_SIZE];
+    printf("Enter your nickName: ");
+    scanf("%s", nickName);
+    if(sendto(clientSocket, nickName, strlen(nickName), 0 , (struct sockaddr *) &socketStructure, slen) < 0)
+        die("sendto()");
+}
+
 void readFromServer() {
 	char buf[BUFFER_SIZE];
 	while(true)
@@ -87,7 +97,7 @@ void readFromKeyboardAndSendServer(){
         memset(message, '\0', BUFFER_SIZE);
         fgets(message, sizeof(message), stdin);
         if (sendto(clientSocket, message, strlen(message) , 0 , (struct sockaddr *) &socketStructure, slen) < 0)
-			die("sendto()");
+			      die("sendto()");
     }
 }
 

@@ -26,16 +26,16 @@ class Formater:
         return ColorSelection.SUCCESS.value + "Connected to the server! " + ColorSelection.FINAL_COLOR.value 
 
     @staticmethod
-    def connection_stablished_server(client):
-        return ColorSelection.SUCCESS.value + f"{client}Connected to the server!" + ColorSelection.FINAL_COLOR.value
+    def connection_stablished_server(nickName):
+        return ColorSelection.SUCCESS.value + f"{nickName} connected to the chat!" + ColorSelection.FINAL_COLOR.value
 
     @staticmethod
-    def left_chat(address):
-        return Formater.message(ColorSelection.WARNING, f"{address} has left the chat")
+    def left_chat(nickName):
+        return Formater.message(ColorSelection.WARNING, f"{nickName} has left the chat")
 
     @staticmethod
-    def joined(address):
-        return Formater.message(ColorSelection.SUCCESS, f"{address} joined!")
+    def joined(nickName):
+        return Formater.message(ColorSelection.SUCCESS, f"{nickName} joined!")
 
 
     @staticmethod
