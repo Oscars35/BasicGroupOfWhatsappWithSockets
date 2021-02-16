@@ -38,15 +38,15 @@ def get_socket(host, port):
 
 # Reads the message from the client. If the client has closed the socket, send to the other clients that the 
 # client has left the group and close his thread and socket
-def receive_message(socket_client, clients, address, color_queue, color, nickName):
+def receive_message(socket_client, clients, color_queue, color, nick_name):
     message = socket_client.recv(BUFFER_SIZE)
     if message:
         final_message = message.decode("utf-8")
         final_message = final_message.replace("\n", "")
-        final_message = Formater.message_send(color, final_message, nickName)
+        final_message = Formater.message_send(color, final_message, nick_name)
         send_message_other_clients(final_message, socket_client, clients)
     else:
-        send_message_other_clients(Formater.left_chat(nickName), socket_client, clients)
+        send_message_other_clients(Formater.left_chat(nick_name), socket_client, clients)
         clients.remove(socket_client)
         color_queue.put(color)
         socket_client.close()
@@ -63,18 +63,19 @@ def send_message_other_clients(message, socket_sender, clients):
 
 
 # Reads a message from a socket
-def read_from_socket(socket_client, clients, address, color_queue, color, nickName):
+def read_from_socket(socket_client, clients, color_queue, color, nick_name):
     while True:
         try:
-            receive_message(socket_client, clients, address, color_queue, color, nickName)
+            receive_message(socket_client, clients, color_queue, color, nick_name)
         except socket.error as msg:
             print("socket error: %s",msg)
             sys.exit() 
 
-def receiveNickName(socket_client):
-    nickName = socket_client.recv(BUFFER_SIZE);
-    nickName = nickName.decode("utf-8")
-    return nickName
+def receive_nick_name(socket_client):
+    nick_name = socket_client.recv(BUFFER_SIZE)
+    nick_name = nick_name.decode("utf-8")
+    nick_name = nick_name.replace("\n", "")
+    return nick_name
 
 
 # Gets the connected client, it assigns him a color and reads from his socket
@@ -82,19 +83,19 @@ def connect_client(clients, whats_socket, color_queue):
         while True:
             client_socket, address = whats_socket.accept()
 
-            # receiving client nickName
-            nickName = receiveNickName(client_socket)
+            # receiving client nick_name
+            nick_name = receive_nick_name(client_socket)
     
             # Tell to everybody that the client joined the server
             client_socket.send(str.encode(Formater.connection_stablished_client()))
-            send_message_other_clients(Formater.joined(nickName), client_socket, clients)
-            print(Formater.connection_stablished_server(nickName))
+            send_message_other_clients(Formater.joined(nick_name), client_socket, clients)
+            print(Formater.connection_stablished_server(address))
     
             # Get color for this user
             color = color_queue.get()
     
             clients.append(client_socket)
-            tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, address, color_queue, color, nickName), daemon=True)
+            tn = threading.Thread(target=read_from_socket, args=(client_socket, clients, color_queue, color, nick_name), daemon=True)
             tn.start()
 
 

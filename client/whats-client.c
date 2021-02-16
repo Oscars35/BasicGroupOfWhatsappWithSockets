@@ -72,7 +72,7 @@ void readInfoAndSendInfo() {
 void sendNickNameToServer() {
     char nickName[BUFFER_SIZE];
     printf("Enter your nickName: ");
-    scanf("%s", nickName);
+    fgets(nickName, sizeof(nickName), stdin);
     if(sendto(clientSocket, nickName, strlen(nickName), 0 , (struct sockaddr *) &socketStructure, slen) < 0)
         die("sendto()");
 }
