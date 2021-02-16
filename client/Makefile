@@ -1,10 +1,10 @@
 all: 
 	python whats-server.py &
-	gcc -Wall whats-client.c -o client 
+	gcc whats-client.c -ansi -std=c99 -pedantic -Wall -lpthread -o client
 	./client
 
 test: 
-	gcc -Wall whats-client.c -o client
+	gcc whats-client.c -ansi -std=c99 -pedantic -Wall -lpthread -o client
 	./client
 
 clean:
